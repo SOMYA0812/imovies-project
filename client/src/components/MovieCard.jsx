@@ -1,0 +1,5 @@
+import { Link } from 'react-router-dom';
+import { Star, Clock3, ArrowUpRight } from 'lucide-react';
+export default function MovieCard({ movie, index = 0 }) {
+ return <article className="movie-card" style={{'--delay': `${index * 70}ms`}}><Link to={`/movie/${movie._id}`} className="poster-wrap"><img src={movie.poster || 'https://placehold.co/500x750/171722/ffffff?text=IMovies'} alt={`${movie.title} poster`} loading="lazy" onError={e => {e.currentTarget.src='https://placehold.co/500x750/171722/ffffff?text=IMovies';}}/><span className="rating"><Star size={13} fill="currentColor"/> {movie.rating}</span><span className="poster-cta">Book tickets <ArrowUpRight size={15}/></span></Link><div className="movie-info"><div className="movie-meta"><span>{movie.releaseYear}</span><span className="dot"/><span>{movie.language}</span></div><Link to={`/movie/${movie._id}`} className="movie-title">{movie.title}</Link><div className="movie-bottom"><span>{movie.genre}</span><span><Clock3 size={13}/>{movie.duration} min</span></div></div></article>
+}
