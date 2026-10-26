@@ -2,6 +2,16 @@
   "name": "imovies",
   "version": "1.0.0",
   "private": true,
-  "scripts": {"install:all":"npm install --prefix server && npm install --prefix client", "dev":"concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\""},
-  "devDependencies": {"concurrently":"^9.1.2"}
+  "scripts": {
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "dev:mongo": "docker compose -f docker-compose.dev.yml up -d",
+    "dev:mongo:stop": "docker compose -f docker-compose.dev.yml down",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "docker:down:volumes": "docker compose down -v"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
 }

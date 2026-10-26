@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 const movieSchema = new mongoose.Schema({
-  title: { type: String, required: true },
+  title: { type: String, required: true, trim: true, unique: true },
   description: { type: String, default: '' },
   genre: { type: String, default: 'Drama' },
   duration: { type: Number, default: 120 },

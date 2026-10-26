@@ -1,0 +1,70 @@
+version: "3.9"
+
+services:
+  # ── MongoDB (single-node replica set so transactions work) ─────────────────
+  mongo:
+    image: mongo:7
+    container_name: imovies_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: imovies
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - imovies_net
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    healthcheck:
+      test: |
+        mongosh --quiet --eval "
+          try { rs.status().ok } catch(e) {
+            rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]});
+            print('replica set initiated');
+          }
+        "
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+
+  # ── Express / Node API ──────────────────────────────────────────────────────
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: imovies_server
+    restart: unless-stopped
+    env_file: ./server/.env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/imovies?replicaSet=rs0
+      PORT: 5000
+      CLIENT_URL: http://localhost:5173
+    ports:
+      - "5000:5000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - imovies_net
+
+  # ── React / Vite client ─────────────────────────────────────────────────────
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: imovies_client
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - server
+    networks:
+      - imovies_net
+
+volumes:
+  mongo_data:
+
+networks:
+  imovies_net:
+    driver: bridge

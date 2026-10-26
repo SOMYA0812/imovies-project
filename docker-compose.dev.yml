@@ -1,0 +1,36 @@
+# Development override — only runs MongoDB in Docker.
+# The server and client run natively on your host with hot-reload.
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up -d   # start MongoDB
+#   npm run dev                                       # start server + client
+
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: imovies_mongo_dev
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: imovies
+    volumes:
+      - mongo_dev_data:/data/db
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    healthcheck:
+      test: |
+        mongosh --quiet --eval "
+          try { rs.status().ok } catch(e) {
+            rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]});
+            print('replica set initiated');
+          }
+        "
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+
+volumes:
+  mongo_dev_data:

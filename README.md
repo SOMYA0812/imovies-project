@@ -1,86 +1,167 @@
-# IMovies — MERN Movie Ticket Booking App
+# 🎬 IMovies — MERN Movie Ticket Booking App
 
-A full-stack starter project with a React/Vite frontend, Express API, MongoDB persistence, JWT authentication, movie discovery, showtime/date selection, seat availability, booking history, and cancellation.
+A full-stack movie ticket booking application built with **MongoDB**, **Express**, **React**, and **Node.js**. Features include JWT authentication, movie catalogue with auto-seed, seat selection, booking history, and cancellation.
 
-## Requirements
-- Node.js 18+ (recommended; Node 16 is no longer recommended for current Vite versions)
-- npm
-- MongoDB Community Server running locally, or a MongoDB Atlas connection string
-- VS Code and a modern browser
+![Stack](https://img.shields.io/badge/Stack-MERN-61DAFB?logo=react) ![License](https://img.shields.io/badge/License-MIT-green)
 
-## 1. Configure MongoDB and the server
+> 🖥️ **Prefer running without Docker?** A native MongoDB installation works too
+> (standalone or single-node replica set) — see
+> [Windows Quick Start](#-windows-quick-start--native-mongodb-no-docker).
 
-1. Install and start MongoDB, or create a MongoDB Atlas cluster.
-2. Copy `server/.env.example` to `server/.env`.
-3. Set `MONGODB_URI` to your local or Atlas connection string.
-4. Change `JWT_SECRET` to a long, random secret. Do not commit `.env` to Git.
+---
 
-Example local configuration:
+## ✨ Features
 
-```env
-PORT=5000
-MONGODB_URI=mongodb://127.0.0.1:27017/imovies
-JWT_SECRET=use-a-long-random-secret-here
-CLIENT_URL=http://localhost:5173
-```
+- 🎥 Responsive movie catalogue with search
+- 🪑 Select a date, showtime, and up to 10 seats (A01–F12)
+- 🔐 Register / Login with bcrypt + JWT
+- 📋 View personal bookings and cancel them
+- 🔒 Conflict-safe seat booking enforced by a unique MongoDB seat-lock index
+- 🌱 Auto-seeds sample movies on first request
+- 🚦 Rate limiting on auth routes
 
-## 2. Install dependencies
+---
 
-From the project root:
+## 🏗 Tech Stack
+
+| Layer    | Technology                         |
+|----------|------------------------------------|
+| Frontend | React 18, Vite, React Router, Axios |
+| Backend  | Node.js 20, Express 4, Mongoose 8  |
+| Database | MongoDB 7+ (replica set recommended; standalone supported) |
+| Auth     | JWT, bcryptjs                      |
+| DevOps   | Docker, Docker Compose, nginx      |
+
+---
+
+## 🚀 Quick Start — Docker (Recommended)
+
+> **Prerequisites**: [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
 
 ```bash
+# 1. Clone the repo
+git clone https://github.com/<your-username>/imovies-project.git
+cd imovies-project
+
+# 2. Copy environment file
+copy server\.env.example server\.env   # Windows
+# cp server/.env.example server/.env   # Mac / Linux
+
+# 3. (Optional) Edit server/.env and set a strong JWT_SECRET
+
+# 4. Start everything
+docker compose up --build
+```
+
+- **Client**: http://localhost:5173
+- **API**: http://localhost:5000
+- **Health check**: http://localhost:5000/api/health
+
+To stop: `docker compose down`  
+To wipe the database too: `docker compose down -v`
+
+---
+
+## 🪟 Windows Quick Start — Native MongoDB (no Docker)
+
+Docker is optional; the whole stack runs natively. A user-space MongoDB install
+(no admin rights needed) can be laid out like this:
+
+| Item | Example location |
+|------|------------------|
+| MongoDB binary | `%USERPROFILE%\mongodb\bin\mongod.exe` (also add it to your user `PATH`) |
+| Data directory | `%USERPROFILE%\mongodb\data` |
+| Log file | `%USERPROFILE%\mongodb\log\mongod.log` |
+| Connection string | `mongodb://127.0.0.1:27017/imovies?replicaSet=rs0` |
+| Auto-start at logon | `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\start-imovies-mongodb.vbs` |
+
+Start MongoDB manually if it is not already running:
+
+```powershell
+& "$env:USERPROFILE\mongodb\start-mongodb.ps1"
+```
+
+Then start the app:
+
+```powershell
 npm install
 npm run install:all
-```
-
-If the root `concurrently` dependency was not installed, run `npm install` again from the root.
-
-## 3. Start the application
-
-Ensure MongoDB is running and `server/.env` exists. From the root folder:
-
-```bash
 npm run dev
 ```
 
-Open `http://localhost:5173`. The API runs at `http://localhost:5000`; health check: `http://localhost:5000/api/health`.
+Open **http://localhost:5173**.
 
-Alternatively, run the processes in separate terminals:
+> A standalone MongoDB (without a replica set) also works: the API detects it
+> and automatically uses the non-transactional seat-lock fallback.
+
+---
+
+
+## 🛠 Local Development (Hot-Reload)
+
+This mode runs MongoDB in Docker but the server and client natively — giving you fast hot-reload.
+
+### Prerequisites
+
+- Node.js 20+
+- Docker Desktop
 
 ```bash
-cd server
+# 1. Start MongoDB via Docker
+docker compose -f docker-compose.dev.yml up -d
+
+# 2. Configure environment
+copy server\.env.example server\.env   # Windows
+# cp server/.env.example server/.env   # Mac / Linux
+
+# 3. Install dependencies
+npm install
+npm run install:all
+
+# 4. Run server + client concurrently
 npm run dev
 ```
 
-```bash
-cd client
-npm run dev
-```
+- **Client**: http://localhost:5173
+- **API**: http://localhost:5000/api/health
 
-## Features
-- Responsive movie catalogue with search and movie detail pages
-- Seed catalogue automatically created on the first movie request if the database is empty
-- Register/login with bcrypt password hashing and JWT token authentication
-- Select a date, showtime, and seats (A01–F12); up to 10 seats per booking
-- Check booked seats and prevent conflicts using a MongoDB transaction
-- View personal bookings and cancel a booking
-- API request rate limiting on authentication routes
+---
 
-## API routes
+## ⚙️ Environment Variables
 
-| Method | Route | Purpose | Auth |
-|---|---|---|---|
-| GET | `/api/health` | API status | No |
-| POST | `/api/auth/register` | Create account | No |
-| POST | `/api/auth/login` | Sign in | No |
-| GET | `/api/auth/me` | Current user | Yes |
-| GET | `/api/movies` | List/search movies | No |
-| GET | `/api/movies/:id/availability?date=YYYY-MM-DD&showtime=6%3A30%20PM` | Booked seats | No |
-| POST | `/api/bookings` | Create booking | Yes |
-| GET | `/api/bookings/mine` | Current user's bookings | Yes |
-| PATCH | `/api/bookings/:id/cancel` | Cancel own booking | Yes |
+Copy `server/.env.example` to `server/.env` and fill in the values:
 
-Booking request body:
+| Variable       | Description                                      | Default                                              |
+|----------------|--------------------------------------------------|------------------------------------------------------|
+| `PORT`         | Express server port                              | `5000`                                               |
+| `MONGODB_URI`  | MongoDB connection string (replica set optional)  | `mongodb://127.0.0.1:27017/imovies?replicaSet=rs0` |
+| `JWT_SECRET`   | Long random secret for JWT signing               | *(must be changed)*                                  |
+| `CLIENT_URL`   | Allowed CORS origin                              | `http://localhost:5173`                              |
+
+> ⚠️ **Never commit `.env` to Git.** It is listed in `.gitignore`.
+
+> The client reads `VITE_API_URL` when provided; otherwise it calls
+> `http://<page-host>:5000/api`, which keeps LAN/phone testing working with the
+> Vite dev server.
+
+---
+
+## 📡 API Reference
+
+| Method  | Route                                        | Purpose              | Auth |
+|---------|----------------------------------------------|----------------------|------|
+| `GET`   | `/api/health`                                | API status           | No   |
+| `POST`  | `/api/auth/register`                         | Create account       | No   |
+| `POST`  | `/api/auth/login`                            | Sign in              | No   |
+| `GET`   | `/api/auth/me`                               | Current user         | Yes  |
+| `GET`   | `/api/movies`                                | List / search movies | No   |
+| `GET`   | `/api/movies/:id`                            | Movie details        | No   |
+| `GET`   | `/api/movies/:id/availability?date=&showtime=` | Booked seats       | No   |
+| `POST`  | `/api/bookings`                              | Create booking       | Yes  |
+| `GET`   | `/api/bookings/mine`                         | My bookings          | Yes  |
+| `PATCH` | `/api/bookings/:id/cancel`                   | Cancel booking       | Yes  |
+
+**Booking request body:**
 
 ```json
 {
@@ -91,11 +172,72 @@ Booking request body:
 }
 ```
 
-Seat price is currently a demo flat rate of ₹180 per seat. No payment gateway is integrated. External poster images require an internet connection.
+Seat price: **₹180 per seat** (demo flat rate).
 
-## Important implementation notes
-- MongoDB transactions require a replica set. MongoDB Atlas supports this; a local standalone MongoDB instance may reject transactions. For local transaction testing, configure a single-node replica set or adapt the booking implementation for a development-only environment.
-- The seed movies are demo data. The catalogue endpoint seeds them when the movie collection is empty.
-- JWT is stored in browser local storage in this educational starter; for production, evaluate secure, HTTP-only cookies, CSRF protection, stricter validation, and a more complete threat model.
-- Real-time seat status is fetched when a date/showtime changes. For live push updates, add WebSockets or Server-Sent Events.
-- This is a working educational baseline, not a production cinema/payment system. Add tests, deployment configuration, email confirmations, payment processing, and admin tools before production use.
+---
+
+## 📁 Project Structure
+
+```
+imovies-project/
+├── client/                  # React + Vite frontend
+│   ├── src/
+│   ├── Dockerfile           # Production: nginx serves Vite build
+│   ├── nginx.conf           # SPA routing + API proxy
+│   └── package.json
+├── server/                  # Express API
+│   ├── src/
+│   │   ├── config/db.js     # Mongoose connection
+│   │   ├── middleware/auth.js
+│   │   ├── models/          # User, Movie, Booking, SeatLock
+│   │   ├── routes/          # auth, movies, bookings
+│   │   ├── utils/           # shared validation helpers
+│   │   └── server.js
+│   ├── Dockerfile           # Production server image
+│   ├── .env.example         # Environment template
+│   └── package.json
+├── docker-compose.yml       # Full stack (prod-like)
+├── docker-compose.dev.yml   # MongoDB only (local dev)
+└── package.json             # Root scripts (concurrently)
+```
+
+---
+
+## 🐳 Docker Architecture
+
+```
+┌──────────────────────────────────────────┐
+│  docker compose up                        │
+│                                           │
+│  ┌─────────────┐   ┌──────────────────┐  │
+│  │  imovies_   │   │  imovies_server  │  │
+│  │  client     │──▶│  (Express :5000) │  │
+│  │  (nginx:80) │   └────────┬─────────┘  │
+│  │  :5173      │            │             │
+│  └─────────────┘   ┌────────▼─────────┐  │
+│                     │  imovies_mongo   │  │
+│                     │  (MongoDB :27017)|  │
+│                     │  replica set rs0 │  │
+│                     └──────────────────┘  │
+└──────────────────────────────────────────┘
+```
+
+---
+
+## 📝 Notes
+
+- Seat conflicts are prevented by the `seatlocks` collection. It has a unique
+  index on `{ movie, showDate, showtime, seat }`, so two concurrent requests can
+  never lock the same seat — even on a standalone MongoDB. When a replica set is
+  available, locks and the booking are written in one transaction; otherwise a
+  cleanup fallback is used. (Transactions alone do **not** prevent double
+  booking, because they write different documents and hit write skew.)
+- JWT is stored in `localStorage` — fine for learning; for production use HTTP-only cookies.
+- External movie posters are fetched from TMDB CDN and require internet access.
+- This is an **educational baseline** — add tests, payment processing, and proper security before production.
+
+---
+
+## 📄 License
+
+MIT
